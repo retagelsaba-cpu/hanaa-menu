@@ -85,7 +85,7 @@ const RAW=[
 {t:"مطبخ هناء",i:[["صينية ورق عنب كوارع",180,"🍃"],["صينية ورق عنب بالبطاطس",150,"🍃"],["صينية موزة عنب",280,"🍃"],["صينية موز ضاني",300,"🍖"],["ورقة لحمة بالبطاطس",200,"🥔"],["نص بطة مع عنب وملوخية",280,"🦆"],["بطة كاملة مع عنب وملوخية",520,"🦆"],["نص بطة مع رز وملوخية",260,"🦆"],["طبق ممبار",130,"🌭"],["محشي كرنب",90,"🥬","مش دائماً موجود"],["سرفيس محاشي",70,"🫑"]]}
 ];
 let MENU,ALL;
-const SHEET_URL=""; // ← الصق هنا رابط CSV المنشور من Google Sheets
+const SHEET_URL="https://docs.google.com/spreadsheets/d/e/2PACX-1vTx0Vpn0wQGNNWf8hvUsNT731RacmOP2r1EiG3RtVSo1U8ZmI1phbkQuez7h4emxcZa0VmBVjNBa9qN/pub?gid=1042441792&single=true&output=csv"; // ← الصق هنا رابط CSV المنشور من Google Sheets
 function build(raw){let id=0;MENU=raw.map(c=>({t:c.t,s:c.s,i:c.i.map(x=>({id:++id,n:x[0],p:x[1],e:x[2]||"🍽️",d:x[3]||"",c:c.t,w:x[4]!==undefined?x[4]:(c.t==="مشويات"&&!/سمان|فراخ/.test(x[0]))}))}));ALL=MENU.flatMap(c=>c.i)}
 build(RAW);
 const lt=(it,q)=>it.w?it.p*4*q:it.p*q;
