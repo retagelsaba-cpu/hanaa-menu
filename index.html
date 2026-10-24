@@ -75,7 +75,7 @@ main{padding:6px 12px;max-width:760px;margin:auto}
 <script>
 // ====== الأسعار تقديرية: عدّلها هنا ======
 const PHONE="201114642261";
-const MENU=[
+const RAW=[
 {t:"مشويات",s:"السعر للكيلو • السمان والفراخ بالقطعة",i:[["كفتة",220,"🍢"],["طرب",240,"🥩"],["سجق مشوي",200,"🌭"],["ممبار",200,"🌭"],["موزة ضاني",350,"🍖"],["فرد سمان",150,"🍗"],["نص فراخ مشوية",180,"🍗"]]},
 {t:"محمر في الطاسة",i:[["طلب كبدة",130,"🍳"],["طلب كبدة بتلو",200,"🍳"],["طلب سجق",130,"🌭"],["طلب لحمة محمرة",220,"🥘"],["طلب ممبار",130,"🌭"]]},
 {t:"طواجن",s:"سعر الطاجن",i:[["طاجن ملوخية",90,"🍲"],["شوربة كوارع",120,"🥣"],["عكاوي بالبصل",180,"🥘"],["طاجن سجق حجوجة",160,"🍲"],["طاجن لحمة بالبصل",220,"🍲"],["طاجن الحج",280,"🍲"],["إضافة نخاع",60,"🦴"]]},
@@ -84,8 +84,10 @@ const MENU=[
 {t:"سلطات",i:[["خضرا",25,"🥗"],["طحينة",20,"🥣"],["بتنجان بالثوم",25,"🍆"],["غنوج",25,"🍆"],["طرشي",15,"🫒"],["طماطم بالثوم",25,"🍅"],["سلطة طرشات",25,"🥗"],["خيار مخلل",15,"🥒"],["فلفل مقلي",30,"🌶️"],["طبق جرجير",20,"🥬"],["سرفيس ترشات بدقة حجوجة",40,"🥗"]]},
 {t:"مطبخ هناء",i:[["صينية ورق عنب كوارع",180,"🍃"],["صينية ورق عنب بالبطاطس",150,"🍃"],["صينية موزة عنب",280,"🍃"],["صينية موز ضاني",300,"🍖"],["ورقة لحمة بالبطاطس",200,"🥔"],["نص بطة مع عنب وملوخية",280,"🦆"],["بطة كاملة مع عنب وملوخية",520,"🦆"],["نص بطة مع رز وملوخية",260,"🦆"],["طبق ممبار",130,"🌭"],["محشي كرنب",90,"🥬","مش دائماً موجود"],["سرفيس محاشي",70,"🫑"]]}
 ];
-let id=0;MENU.forEach(c=>c.i=c.i.map(x=>({id:++id,n:x[0],p:x[1],e:x[2],d:x[3]||"",c:c.t,w:c.t==="مشويات"&&!/سمان|فراخ/.test(x[0])})));
-const ALL=MENU.flatMap(c=>c.i);
+let MENU,ALL;
+const SHEET_URL=""; // ← الصق هنا رابط CSV المنشور من Google Sheets
+function build(raw){let id=0;MENU=raw.map(c=>({t:c.t,s:c.s,i:c.i.map(x=>({id:++id,n:x[0],p:x[1],e:x[2]||"🍽️",d:x[3]||"",c:c.t,w:x[4]!==undefined?x[4]:(c.t==="مشويات"&&!/سمان|فراخ/.test(x[0]))}))}));ALL=MENU.flatMap(c=>c.i)}
+build(RAW);
 const lt=(it,q)=>it.w?it.p*4*q:it.p*q;
 const qs=(it,q)=>ar(q)+(it.w?" كجم":"");
 const pu=it=>it.w?ar(it.p*4)+" ج/كجم":pr(it.p);
@@ -159,6 +161,19 @@ $("#fl").onclick=sheet;
 $("#ov").addEventListener("click",e=>{if(e.target.id==="ov")$("#ov").style.display="none"});
 $("#pk").addEventListener("click",e=>{if(e.target.id==="pk")pkx()});
 $("#q").oninput=render;
+function csv(t){const r=[];let a=[],f="",q=0;t=t.replace(/^\uFEFF/,"");for(let i=0;i<t.length;i++){const c=t[i];if(q){if(c=='"'){if(t[i+1]=='"'){f+='"';i++}else q=0}else f+=c}else if(c=='"')q=1;else if(c==","){a.push(f);f=""}else if(c=="\n"||c=="\r"){if(c=="\r"&&t[i+1]=="\n")i++;a.push(f);f="";r.push(a);a=[]}else f+=c}if(f||a.length){a.push(f);r.push(a)}return r}
+function fromCsv(t){const R=csv(t).slice(1),m={},o=[];
+ R.forEach(r=>{if(r.length<3||!(r[0]||"").trim()||!(r[1]||"").trim())return;if((r[4]||"").trim()==="لا")return;
+ const w=(r[3]||"").trim()==="كجم",p=parseFloat((r[2]||"").replace(/[٠-٩]/g,d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d)))||0,k=r[0].trim();
+ if(!m[k]){m[k]={t:k,s:(RAW.find(c=>c.t===k)||{}).s,i:[]};o.push(m[k])}
+ m[k].i.push([r[1].trim(),w?p/4:p,(r[5]||"").trim()||"🍽️",(r[6]||"").trim(),w])});
+ return o.filter(c=>c.i.length)}
+function apply(t){try{const o=fromCsv(t);if(!o.length)return false;build(o);const g=ALL.map(x=>x.n).join("|");let old="";try{old=localStorage.getItem("hsig")||"";localStorage.setItem("hsig",g)}catch(e){}if(old!==g){cart={};save()}return true}catch(e){return false}}
+(async()=>{if(!SHEET_URL)return;
+ try{if(!localStorage.getItem("hsig"))localStorage.setItem("hsig",ALL.map(x=>x.n).join("|"))}catch(e){}
+ let c="";try{c=localStorage.getItem("hcsv")||""}catch(e){}
+ if(c&&apply(c))render();
+ try{const r=await fetch(SHEET_URL+(SHEET_URL.includes("?")?"&":"?")+"t="+Date.now());if(!r.ok)return;const t=await r.text();if(apply(t)){try{localStorage.setItem("hcsv",t)}catch(e){}render()}}catch(e){}})();
 render();
 </script>
 </body>
